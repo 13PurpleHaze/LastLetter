@@ -7,10 +7,11 @@ from pathlib import Path
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         extra="allow",
-        case_sensitive=True,  ## Чувствительность к регистру
+        case_sensitive=True,
         env_file=str(Path.cwd().parent / ".env"),
     )
-    BASE_DIR: str = str(Path.cwd().parent)
+    BASE_DIR: Path = Path.cwd().parent
+    CURRENT_DIR: Path = Path.cwd()
 
     # PG
     POSTGRES_DB_NAME: str
@@ -25,6 +26,19 @@ class Settings(BaseSettings):
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    VERIFICATION_TOKEN_EXPIRES_DAYS: int = 1
+    PRIVATE_KEY_PATH: Path = CURRENT_DIR / "secrets" / "private.pem"
+    PUBLIC_KEY_PATH: Path = CURRENT_DIR / "certs" / "public.pem"
+    ALGORITHM: str
+
+    # MailDev
+    MAIL_SERVER: str
+    MAIL_PORT: int
+    MAIL_FROM: str
+
+    # App
+    HOST_NAME: str
+    PORT: int
 
     @field_validator("POSTGRES_DSN", mode="before")
     @classmethod
