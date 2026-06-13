@@ -1,7 +1,10 @@
 class UserNotFoundError(Exception):
-    def __init__(self, email: str):
+    def __init__(self, email: str | None = None):
         self.email = email
-        super().__init__(f"Пользователь с email {email} не найден")
+        if not email:
+            super().__init__("Пользователь не найден")
+        else:
+            super().__init__(f"Пользователь с email {email} не найден")
 
 
 class InvalidCredentialsError(Exception):

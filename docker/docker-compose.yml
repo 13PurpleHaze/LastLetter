@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: pg
     ports:
       - "5432:5432"
     volumes:
@@ -19,6 +20,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    container_name: app
     env_file:
       - ../.env
     ports:
@@ -33,9 +35,24 @@ services:
       - ../secrets:/app/secrets:ro
   maildev:
     image: maildev/maildev
+    container_name: maildev
     ports:
       - "1080:1080"
       - "1025:1025"
     restart: unless-stopped
+  garage:
+    image: dxflrs/garage:v2.3.0
+    container_name: garage
+    restart: unless-stopped
+    ports:
+      - "3900:3900"
+      - "3901:3901"
+      - "3902:3902"
+    volumes:
+      - ../garage.toml:/etc/garage.toml:ro
+      - ./data/meta:/var/lib/garage/meta
+      - ./data/data:/var/lib/garage/data
 volumes:
   pgdata:
+  garage-data:
+  garage-meta:

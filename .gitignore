@@ -29,6 +29,8 @@ env/
 
 # Docker
 *.pid
+docker/data/
+docker/minio-data/
 
 # Secrets
 secrets/

@@ -31,7 +31,9 @@ async def get_current_user(
     )
 
 
-async def get_current_active_user(user: CurrentUserSchema = Depends(get_current_user)):
+def get_current_active_user(
+    user: CurrentUserSchema = Depends(get_current_user),
+) -> CurrentUserSchema:
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user"
@@ -39,13 +41,18 @@ async def get_current_active_user(user: CurrentUserSchema = Depends(get_current_
     return user
 
 
-async def get_current_user_with_roles(
+def get_current_user_with_roles(
     allowed_roles: list[str],
-    user: CurrentUserSchema = Depends(get_current_active_user),
-) -> CurrentUserSchema:
-    user_roles = [r.slug for r in user.roles]
-    if not any(role in user_roles for role in allowed_roles):
-        raise HTTPException(
-            status_code=403, detail=f"Required one of roles: {allowed_roles}"
-        )
-    return user
+):
+    def dependency(
+        user: CurrentUserSchema = Depends(get_current_active_user),
+    ) -> CurrentUserSchema:
+        user_roles = [r.slug for r in user.roles]
+        if not any(role in user_roles for role in allowed_roles):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Required one of roles: {allowed_roles}",
+            )
+        return user
+
+    return dependency

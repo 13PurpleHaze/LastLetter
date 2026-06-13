@@ -8,7 +8,7 @@ from modules.auth.service import AuthService
 from modules.email.service import EmailService
 from modules.user.schemas import CurrentUserSchema
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post(

@@ -1,5 +1,5 @@
 from infrastructure.db.models import User, Role
-from .schemas import UserSchema, RoleSchema
+from .schemas import UserSchema, RoleSchema, CurrentUserSchema
 
 
 class UserSchemaFactory:
@@ -27,4 +27,18 @@ class RoleSchemaFactory:
             id=role.id,
             slug=role.slug,
             title=role.title,
+        )
+
+
+class CurrentUserSchemaFactory:
+    @staticmethod
+    def model_to_schema(user: User) -> CurrentUserSchema:
+        return CurrentUserSchema(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            date_of_birth=user.date_of_birth,
+            is_active=user.is_active,
+            email_verified=user.email_verified,
+            roles=[RoleSchemaFactory.model_to_schema(role) for role in user.roles],
         )
