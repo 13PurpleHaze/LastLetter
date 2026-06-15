@@ -11,7 +11,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-from constants import RoleId, RoleSlug
+from core.constants import RoleId, RoleSlug
 
 # revision identifiers, used by Alembic.
 revision: str = "91a23a31c261"

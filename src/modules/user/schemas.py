@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import date, datetime
 
 
@@ -30,10 +30,11 @@ class UserCreateSchema(BaseModel):
 
 
 class UserUpdateSchema(BaseModel):
-    email: EmailStr | None
-    first_name: str | None
-    password: str | None
-    date_of_birth: date | None
+    email: EmailStr | None = None
+    first_name: str | None = None
+    password: str | None = None
+    date_of_birth: date | None = None
+    email_verified: bool | None = None
 
 
 class CurrentUserSchema(BaseModel):
@@ -44,3 +45,20 @@ class CurrentUserSchema(BaseModel):
     roles: list[RoleSchema]
     is_active: bool
     email_verified: bool
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "first_name": "Максим",
+                "email": "max@example.com",
+                "date_of_birth": str(date(1999, 1, 1)),
+                "is_active": True,
+                "email_verified": True,
+                "roles": [
+                    {"id": 1, "slug": "parent", "title": "Родитель"},
+                    {"id": 2, "slug": "child", "title": "Ребенок"},
+                ],
+            }
+        }
+    )

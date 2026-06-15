@@ -37,8 +37,13 @@ class Settings(BaseSettings):
     MAIL_FROM: str
 
     # App
-    HOST_NAME: str
-    PORT: int
+    BASE_URL: str
+
+    # RabbitMQ
+    RABBITMQ_DEFAULT_USER: str
+    RABBITMQ_DEFAULT_PASS: str
+    RABBITMQ_DEFAULT_HOST: str
+    RABBITMQ_DEFAULT_PORT: str
 
     @field_validator("POSTGRES_DSN", mode="before")
     @classmethod

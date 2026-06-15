@@ -37,5 +37,16 @@ services:
       - "1080:1080"
       - "1025:1025"
     restart: unless-stopped
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
 volumes:
   pgdata:
+  rabbitmq-data:

@@ -3,8 +3,9 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select, insert
 
 from infrastructure.db.models import User, Role, UserRole
-from modules.user.schemas import UserSchema, UserCreateSchema
+from modules.user.schemas import UserSchema, UserCreateSchema, UserUpdateSchema
 from .factories import UserSchemaFactory
+from datetime import datetime
 
 
 class UserRepository:
@@ -56,8 +57,28 @@ class UserRepository:
         )
         await self.session.execute(stmt)
 
-    async def verify_email(self, user_id: int):
-        user = await self.session.get(User, user_id)
+    async def update_user(
+        self, user_id: int, user_update: UserUpdateSchema
+    ) -> UserSchema | None:
+        stmt = select(User).where(User.id == user_id).options(selectinload(User.roles))
+        result = await self.session.execute(stmt)
+        user = result.scalar_one_or_none()
         if user:
-            user.email_verified = True
+            if user_update.email is not None:
+                user.email = str(user_update.email)
+                user.email_verified = False
+            if user_update.first_name is not None:
+                user.first_name = user_update.first_name
+            if user_update.date_of_birth:
+                user.date_of_birth = datetime.combine(
+                    user_update.date_of_birth, datetime.now().time()
+                )
+            if user_update.password is not None:
+                user.password = user_update.password
+            if user_update.email_verified is not None:
+                user.email_verified = user_update.email_verified
+
             await self.session.commit()
+            await self.session.refresh(user)
+            return UserSchemaFactory.model_to_schema(user=user)
+        return None

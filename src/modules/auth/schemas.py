@@ -22,6 +22,10 @@ class UserVerifySchema(BaseModel):
     email: EmailStr
 
 
+class UserPasswordConfirmSchema(BaseModel):
+    password: str
+
+
 class TokenSchema(BaseModel):
     access_token: str
     refresh_token: str
