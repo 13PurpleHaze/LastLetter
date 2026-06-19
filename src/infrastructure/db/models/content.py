@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from infrastructure.db.models import Capsule
 from .base import Base
+
+if TYPE_CHECKING:
+    from .capsule import Capsule
 
 
 class Content(Base):

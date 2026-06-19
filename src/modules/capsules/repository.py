@@ -3,8 +3,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select, delete, func
 from datetime import datetime
 
-from constants import RoleId
-from infrastructure.db.models import UserCapsule, Content, UserRole
+from infrastructure.db.models import UserCapsule, Content
 from modules.capsules.factories import (
     CapsuleSchemaFactory,
     ContentSchemaFactory,
@@ -38,7 +37,7 @@ class CapsuleRepository:
         stmt = (
             select(Capsule)
             .where(Capsule.creator_id == current_user.id)
-            .options(selectinload(Capsule.users))
+            .options(selectinload(Capsule.users).selectinload(User.roles))
             .options(selectinload(Capsule.contents))
         )
         stmt = filter.apply(stmt)
@@ -58,7 +57,12 @@ class CapsuleRepository:
         ], total
 
     async def get_capsule_by_id(self, capsule_id: int) -> CapsuleSchema | None:
-        stmt = select(Capsule).where(Capsule.id == capsule_id)
+        stmt = (
+            select(Capsule)
+            .where(Capsule.id == capsule_id)
+            .options(selectinload(Capsule.contents))
+            .options(selectinload(Capsule.users).selectinload(User.roles))
+        )
         result = await self.session.execute(stmt)
         capsule = result.scalar_one_or_none()
         if not capsule:
@@ -101,45 +105,56 @@ class CapsuleRepository:
 
     async def create_capsule(
         self, capsule_create: CapsuleCreateSchema, creator_id: int
-    ):
+    ) -> CapsuleSchema:
         capsule = Capsule(
-            title=capsule_create.title, text=capsule_create.text, creator_id=creator_id
+            title=capsule_create.title,
+            text=capsule_create.text,
+            creator_id=creator_id,
         )
         self.session.add(capsule)
         await self.session.commit()
+        await self.session.refresh(
+            capsule,
+            attribute_names=["users", "contents"],
+        )
+        return CapsuleSchemaFactory.model_to_schema(capsule=capsule)
 
     async def delete_capsule(self, capsule_id: int):
         stmt = delete(Capsule).where(Capsule.id == capsule_id)
         await self.session.execute(stmt)
+        await self.session.commit()
+
+    async def _find_user_capsule(
+        self, capsule_id: int, user_id: int
+    ) -> UserCapsule | None:
+        stmt = select(UserCapsule).where(
+            UserCapsule.capsule_id == capsule_id, UserCapsule.user_id == user_id
+        )
+        result = await self.session.execute(stmt)
+        user_capsule = result.scalar_one_or_none()
+        return user_capsule
 
     async def attach_user(
         self, capsule_id: int, user_id: int, send_at: datetime | None = None
-    ):
-        stmt = select(User).where(User.id == user_id)
-        result = await self.session.execute(stmt)
-        user = result.scalar_one_or_none()
-        if user and RoleId.CHILD.value not in user.roles:
-            user_role = UserRole(
-                user_id=user_id,
-                role_id=RoleId.CHILD.value,
-            )
-            self.session.add(user_role)
-
+    ) -> CapsuleUserSchema:
+        user_capsule = await self._find_user_capsule(capsule_id, user_id)
+        if user_capsule:
+            return CapsuleUserFactory.model_to_schema(user_capsule=user_capsule)
         user_capsule = UserCapsule(
             capsule_id=capsule_id,
             user_id=user_id,
             send_at=send_at,
         )
         self.session.add(user_capsule)
-
         await self.session.commit()
+        return CapsuleUserFactory.model_to_schema(user_capsule=user_capsule)
 
     async def detach_user(self, capsule_id: int, user_id: int):
         stmt = delete(UserCapsule).where(
             UserCapsule.capsule_id == capsule_id, UserCapsule.user_id == user_id
         )
         await self.session.execute(stmt)
-        await self.session.flush()
+        await self.session.commit()
 
     async def update_send_date(
         self, capsule_id: int, user_id: int, send_at: datetime
@@ -158,7 +173,12 @@ class CapsuleRepository:
     async def update_capsule_text(
         self, capsule_id: int, capsule_update: CapsuleUpdateSchema
     ) -> CapsuleSchema | None:
-        stmt = select(Capsule).where(Capsule.id == capsule_id)
+        stmt = (
+            select(Capsule)
+            .where(Capsule.id == capsule_id)
+            .options(selectinload(Capsule.contents))
+            .options(selectinload(Capsule.users))
+        )
         result = await self.session.execute(stmt)
         capsule = result.scalar_one_or_none()
         if not capsule:

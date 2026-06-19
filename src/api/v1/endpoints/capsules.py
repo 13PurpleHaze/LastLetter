@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, status
 from api.v1.schemas.failed_response import FailedResponseSchema
 from api.v1.schemas.pagination import ListResponseSchema, PaginationParams
 from api.v1.schemas.success_response import SuccessResponseSchema
-from constants import RoleSlug
+from core.constants import RoleSlug
 from modules.auth.dependencies import (
     get_current_user_with_roles,
 )
@@ -175,13 +175,13 @@ async def attach_user(
     capsule_service: CapsuleService = Depends(get_capsule_service),
     user_service: UserService = Depends(get_user_service),
 ):
-    await capsule_service.attach_user(
+    user_capsule = await capsule_service.attach_user(
         capsule_id=capsule_id,
         user_attach=user,
         current_user=current_user,
         user_service=user_service,
     )
-    return SuccessResponseSchema(result=[])
+    return SuccessResponseSchema(result=user_capsule)
 
 
 @router.delete(

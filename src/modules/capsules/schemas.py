@@ -30,7 +30,7 @@ class CapsuleCreateSchema(BaseModel):
 
 class CapsuleUserAttachSchema(BaseModel):
     user_id: int
-    send_at: datetime | None
+    send_at: datetime | None = None
 
 
 class CapsuleUpdateDateSchema(BaseModel):

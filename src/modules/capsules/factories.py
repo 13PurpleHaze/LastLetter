@@ -1,6 +1,6 @@
 from infrastructure.db.models import Capsule, Content, UserCapsule
 from .schemas import CapsuleSchema, ContentSchema, CapsuleUserSchema
-from ..user.factories import CurrentUserSchemaFactory
+from modules.user.factories import CurrentUserSchemaFactory
 
 
 class ContentSchemaFactory:

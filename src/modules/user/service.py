@@ -1,6 +1,6 @@
 from utils.auth.secure import hash_password
 from .repository import UserRepository
-from .schemas import UserSchema, UserCreateSchema
+from .schemas import UserSchema, UserCreateSchema, UserUpdateSchema
 
 
 class UserService:
@@ -22,5 +22,9 @@ class UserService:
     async def get_user_by_id(self, user_id: int) -> UserSchema | None:
         return await self.repository.get_user_by_id(user_id)
 
-    async def verify_email(self, user_id: int):
-        await self.repository.verify_email(user_id=user_id)
+    async def update_user(
+        self, user_id: int, user_update: UserUpdateSchema
+    ) -> UserSchema | None:
+        return await self.repository.update_user(
+            user_id=user_id, user_update=user_update
+        )

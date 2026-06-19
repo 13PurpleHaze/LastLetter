@@ -1,10 +1,14 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
+
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .role import Role
 from .base import Base
-from .capsule import Capsule
+
+if TYPE_CHECKING:
+    from .capsule import Capsule
+    from .role import Role
 
 
 class User(Base):

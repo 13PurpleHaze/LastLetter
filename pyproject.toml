@@ -19,6 +19,7 @@ dependencies = [
     "pyjwt (>=2.13.0,<3.0.0)",
     "bcrypt (>=5.0.0,<6.0.0)",
     "aiosmtplib (>=5.1.1,<6.0.0)",
+    "dramatiq[rabbitmq,watch] (>=2.2.0,<3.0.0)",
     "python-multipart (>=0.0.31,<0.0.32)",
     "aioboto3 (>=15.5.0,<16.0.0)",
     "uuid (>=1.30,<2.0)"

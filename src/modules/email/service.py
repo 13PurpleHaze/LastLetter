@@ -1,13 +1,12 @@
 from email.message import EmailMessage
-
-import aiosmtplib
+import smtplib
 
 from config import settings
 
 
 class EmailService:
     @staticmethod
-    async def send_email(
+    def send_email(
         to_email: str, title: str, text: str, from_email: str = settings.MAIL_FROM
     ):
         message = EmailMessage()
@@ -16,6 +15,5 @@ class EmailService:
         message["Subject"] = title
         message.set_content(text)
 
-        await aiosmtplib.send(
-            message, hostname=settings.MAIL_SERVER, port=settings.MAIL_PORT
-        )
+        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT) as server:
+            server.send_message(message)

@@ -1,5 +1,6 @@
 from api.v1.schemas.pagination import PaginationParams, PageMetaSchema
-from modules.auth.exception import UserNotFoundError
+from core.constants import RoleSlug
+from modules.user.exceptions import UserNotFoundError
 from modules.capsules.exceptions import (
     CapsuleNotFoundError,
     PermissionDeniedError,
@@ -97,7 +98,7 @@ class CapsuleService:
         user_attach: CapsuleUserAttachSchema,
         current_user: CurrentUserSchema,
         user_service: UserService,
-    ) -> None:
+    ) -> CapsuleUserSchema:
         capsule = await self.repository.get_capsule_by_id(capsule_id=capsule_id)
         if not capsule:
             raise CapsuleNotFoundError(capsule_id=capsule_id)
@@ -106,7 +107,9 @@ class CapsuleService:
         user = await user_service.get_user_by_id(user_id=user_attach.user_id)
         if not user:
             raise UserNotFoundError()
-        await self.repository.attach_user(
+        if RoleSlug.CHILD not in [role.slug for role in user.roles]:
+            raise PermissionDeniedError()
+        return await self.repository.attach_user(
             user_id=user_attach.user_id,
             capsule_id=capsule_id,
             send_at=user_attach.send_at,
