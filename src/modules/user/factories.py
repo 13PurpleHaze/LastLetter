@@ -21,8 +21,8 @@ class UserSchemaFactory:
 
 
 class CurrentUserSchemaFactory:
-    @classmethod
-    def user_schema_to_current_user_schema(cls, user: UserSchema) -> CurrentUserSchema:
+    @staticmethod
+    def user_schema_to_current_user_schema(user: UserSchema) -> CurrentUserSchema:
         return CurrentUserSchema(
             id=user.id,
             email=user.email,
@@ -31,6 +31,18 @@ class CurrentUserSchemaFactory:
             roles=user.roles,
             is_active=user.is_active,
             email_verified=user.email_verified,
+        )
+
+    @staticmethod
+    def model_to_schema(user: User) -> CurrentUserSchema:
+        return CurrentUserSchema(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            date_of_birth=user.date_of_birth,
+            is_active=user.is_active,
+            email_verified=user.email_verified,
+            roles=[RoleSchemaFactory.model_to_schema(role) for role in user.roles],
         )
 
 

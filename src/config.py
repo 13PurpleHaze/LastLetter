@@ -45,6 +45,14 @@ class Settings(BaseSettings):
     RABBITMQ_DEFAULT_HOST: str
     RABBITMQ_DEFAULT_PORT: str
 
+    # S3
+    S3_ENDPOINT_URL: str
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
+    S3_BUCKET_NAME: str
+    S3_REGION: str
+    S3_FORCE_PATH_STYLE: bool
+
     @field_validator("POSTGRES_DSN", mode="before")
     @classmethod
     def assemble_async_postgres_dsn(cls, v: str | None, values: ValidationInfo):

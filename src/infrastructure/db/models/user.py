@@ -1,9 +1,14 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
+
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .role import Role
 from .base import Base
+
+if TYPE_CHECKING:
+    from .capsule import Capsule
+    from .role import Role
 
 
 class User(Base):
@@ -22,4 +27,7 @@ class User(Base):
         server_default=func.now(), onupdate=func.now()
     )
 
+    capsules: Mapped[list["Capsule"]] = relationship(
+        secondary="user_capsule", back_populates="users"
+    )
     roles: Mapped[list["Role"]] = relationship(secondary="user_role")

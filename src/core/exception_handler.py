@@ -5,7 +5,16 @@ from typing import Type
 from sqlalchemy.exc import DatabaseError
 
 from api.v1.schemas.failed_response import FailedResponseSchema, FailedDetailSchema
-from modules.auth.exceptions import AppException, UnauthorizedError
+from modules.auth.exceptions import (
+    AppException,
+    UnauthorizedError,
+    InvalidCredentialsError,
+)
+from modules.capsules.exceptions import (
+    PermissionDeniedError,
+    CapsuleNotFoundError,
+    ContentNotFoundError,
+)
 from modules.user.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
@@ -38,6 +47,22 @@ ERROR_MAPPING: dict[Type[AppException], dict] = {
     EmailAlreadyVerifiedError: {
         "status_code": status.HTTP_409_CONFLICT,
         "code": "email_already_verified",
+    },
+    InvalidCredentialsError: {
+        "status_code": status.HTTP_401_UNAUTHORIZED,
+        "code": "invalid_credentials",
+    },
+    PermissionDeniedError: {
+        "status_code": status.HTTP_403_FORBIDDEN,
+        "code": "permission_denied",
+    },
+    CapsuleNotFoundError: {
+        "status_code": status.HTTP_404_NOT_FOUND,
+        "code": "not_found",
+    },
+    ContentNotFoundError: {
+        "status_code": status.HTTP_404_NOT_FOUND,
+        "code": "not_found",
     },
 }
 
