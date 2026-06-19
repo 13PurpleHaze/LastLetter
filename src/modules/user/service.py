@@ -1,11 +1,30 @@
+from api.v1.schemas.pagination import PaginationParams, PageMetaSchema
+from infrastructure.filter import Filter
 from utils.auth.secure import hash_password
 from .repository import UserRepository
-from .schemas import UserSchema, UserCreateSchema, UserUpdateSchema
+from .schemas import UserSchema, UserCreateSchema, UserUpdateSchema, CurrentUserSchema
 
 
 class UserService:
     def __init__(self, repository: UserRepository):
         self.repository = repository
+
+    async def get_users(
+        self,
+        filter: Filter,
+        pagination: PaginationParams,
+    ) -> tuple[list[CurrentUserSchema], PageMetaSchema]:
+        users, total = await self.repository.get_users(
+            filter=filter,
+            limit=pagination.limit,
+            offset=pagination.offset,
+        )
+        meta = PageMetaSchema(
+            total=total,
+            limit=pagination.limit,
+            offset=pagination.offset,
+        )
+        return users, meta
 
     async def create_user(
         self, user_create: UserCreateSchema, role_ids: list[int]

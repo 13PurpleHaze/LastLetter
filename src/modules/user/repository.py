@@ -1,16 +1,40 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import select, insert
+from sqlalchemy.sql import select, insert, func
 
 from infrastructure.db.models import User, Role, UserRole
+from infrastructure.filter import Filter
 from modules.user.schemas import UserSchema, UserCreateSchema, UserUpdateSchema
-from .factories import UserSchemaFactory
+from .factories import UserSchemaFactory, CurrentUserSchemaFactory
 from datetime import datetime
+from modules.user.schemas import CurrentUserSchema
 
 
 class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def get_users(
+        self,
+        limit: int,
+        offset: int,
+        filter: Filter,
+    ) -> tuple[list[CurrentUserSchema], int]:
+        stmt = select(User).options(selectinload(User.roles))
+        stmt = filter.apply(stmt)
+        total = await self.session.scalar(
+            select(func.count()).select_from(stmt.subquery())
+        )
+        total = total or 0
+        stmt = stmt.offset(offset).limit(limit)
+        result = await self.session.execute(stmt)
+        users = result.scalars().all()
+
+        if not users:
+            return [], 0
+        return [
+            CurrentUserSchemaFactory.model_to_schema(user=user) for user in users
+        ], total
 
     async def get_user_by_email(self, email: str) -> UserSchema | None:
         stmt = select(User).where(User.email == email).options(selectinload(User.roles))

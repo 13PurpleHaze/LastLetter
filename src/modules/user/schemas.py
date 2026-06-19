@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import date, datetime
 
+from core.constants import RoleSlug
+
 
 class RoleSchema(BaseModel):
     id: int
@@ -62,3 +64,8 @@ class CurrentUserSchema(BaseModel):
             }
         }
     )
+
+
+class UserFilterSchema(BaseModel):
+    email: str | None = None
+    role_slug: RoleSlug | None = None
