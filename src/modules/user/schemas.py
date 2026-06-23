@@ -1,11 +1,20 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import date, datetime
 
+from core.constants import RoleSlug
+
 
 class RoleSchema(BaseModel):
     id: int
     slug: str
     title: str
+
+
+class FamilyMemberSchema(BaseModel):
+    id: int
+    first_name: str
+    email: str
+    roles: list[RoleSchema]
 
 
 class UserSchema(BaseModel):
@@ -18,6 +27,8 @@ class UserSchema(BaseModel):
     email_verified: bool
     is_active: bool
     roles: list[RoleSchema]
+    family: list[FamilyMemberSchema]
+    verificator_id: int | None
     created_at: datetime
     updated_at: datetime
 
@@ -35,6 +46,8 @@ class UserUpdateSchema(BaseModel):
     password: str | None = None
     date_of_birth: date | None = None
     email_verified: bool | None = None
+    is_deceased: bool | None = None
+    verificator_id: int | None = None
 
 
 class CurrentUserSchema(BaseModel):
@@ -45,6 +58,9 @@ class CurrentUserSchema(BaseModel):
     roles: list[RoleSchema]
     is_active: bool
     email_verified: bool
+    family: list[FamilyMemberSchema]
+    verificator_id: int | None
+    is_deceased: bool
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -59,6 +75,22 @@ class CurrentUserSchema(BaseModel):
                     {"id": 1, "slug": "parent", "title": "Родитель"},
                     {"id": 2, "slug": "child", "title": "Ребенок"},
                 ],
+                "family": [
+                    {
+                        "id": 67,
+                        "first_name": "Август",
+                        "email": "agust@mail.com",
+                        "roles": [
+                            {"id": 1, "slug": "parent", "title": "Родитель"},
+                            {"id": 2, "slug": "child", "title": "Ребенок"},
+                        ],
+                    },
+                ],
             }
         }
     )
+
+
+class UserFilterSchema(BaseModel):
+    email: str | None = None
+    role_slug: RoleSlug | None = None

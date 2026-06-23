@@ -5,6 +5,7 @@ from .service import AuthService
 from modules.user.dependencies import get_user_service
 from modules.user.schemas import CurrentUserSchema
 from modules.user.service import UserService
+from ..user.factories import CurrentUserSchemaFactory
 
 
 def get_auth_service(user_service: UserService = Depends(get_user_service)):
@@ -23,15 +24,7 @@ async def get_current_user(
     user = await user_service.get_user_by_id(user_id=user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    return CurrentUserSchema(
-        id=user.id,
-        first_name=user.first_name,
-        email=user.email,
-        date_of_birth=user.date_of_birth,
-        roles=user.roles,
-        is_active=user.is_active,
-        email_verified=user.email_verified,
-    )
+    return CurrentUserSchemaFactory.user_schema_to_current_user_schema(user)
 
 
 def get_current_active_user(

@@ -1,6 +1,6 @@
 from config import settings
 from datetime import datetime, timedelta, timezone
-from core.constants import RoleId
+from core.constants import RoleSlug
 from modules.email.tasks import (
     send_password_reset_email_task,
     send_verification_link_email_task,
@@ -38,10 +38,8 @@ class AuthService:
         user_create = AuthSchemaFactory.user_register_schema_to_user_create_schema(
             user=user_register
         )
-        role_ids = AuthService.get_role_ids(user=user_register)
-        user = await self.user_service.create_user(
-            user_create=user_create, role_ids=role_ids
-        )
+        roles = AuthService.get_roles(user=user_register)
+        user = await self.user_service.create_user(user_create=user_create, roles=roles)
         verification_link = AuthService.create_verification_link(user_id=user.id)
 
         send_verification_link_email_task.send(
@@ -65,7 +63,7 @@ class AuthService:
             hashed_password=user_by_email.password, password=user_login.password
         ):
             raise InvalidCredentialsError()
-        current_user = AuthSchemaFactory.user_schema_to_current_user_schema(
+        current_user = CurrentUserSchemaFactory.user_schema_to_current_user_schema(
             user=user_by_email
         )
         return AuthService.create_auth_tokens(current_user=current_user)
@@ -187,13 +185,13 @@ class AuthService:
 
     # Лучше собирать не id'шники, а названия и по ним уже в репозитории делать запрос
     @staticmethod
-    def get_role_ids(user) -> list[int]:
+    def get_roles(user) -> list[str]:
         return [
-            role_id.value
-            for role_id, flag in [
-                (RoleId.PARENT, user.is_parent),
-                (RoleId.CHILD, user.is_child),
-                (RoleId.VERIFIER, user.is_verifier),
+            role.value
+            for role, flag in [
+                (RoleSlug.PARENT, user.is_parent),
+                (RoleSlug.CHILD, user.is_child),
+                (RoleSlug.VERIFIER, user.is_verifier),
             ]
             if flag
         ]
