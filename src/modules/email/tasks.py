@@ -42,3 +42,18 @@ def send_password_reset_email_task(link: str, to_email: str):
         title=EmailTemplates.PASSWORD_RESET_SUBJECT,
         text=EmailTemplates.PASSWORD_RESET_TEXT.format(link=link),
     )
+
+
+@dramatiq.actor(
+    queue_name="email_user_invite_verification",
+    max_retries=5,
+    min_backoff=30000,
+    max_backoff=600000,
+    time_limit=60000,
+)
+def send_user_invite_verification_email_task(link: str, to_email: str, from_email: str):
+    EmailService.send_email(
+        to_email=to_email,
+        title=EmailTemplates.INVITE_SUBJECT,
+        text=EmailTemplates.INVITE_TEXT.format(email=from_email, link=link),
+    )

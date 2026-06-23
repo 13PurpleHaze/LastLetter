@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, status
 
@@ -42,3 +42,54 @@ async def get_users(
         pagination=pagination,
     )
     return SuccessResponseSchema(result=ListResponseSchema(meta=meta, items=users))
+
+
+@router.post(
+    path="/{user_id}/invite",
+    description="Добавить пользователя как верификатора или ребенка",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessResponseSchema,
+    responses={
+        status.HTTP_200_OK: {"model": SuccessResponseSchema},
+        status.HTTP_403_FORBIDDEN: {"model": FailedResponseSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": FailedResponseSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": FailedResponseSchema},
+    },
+)
+async def invite_attempt(
+    user_id: int,
+    role: Literal[RoleSlug.VERIFIER, RoleSlug.CHILD],
+    user_service: UserService = Depends(get_user_service),
+    current_user: CurrentUserSchema = Depends(
+        get_current_user_with_roles([RoleSlug.PARENT, RoleSlug.ADMIN])
+    ),
+):
+    await user_service.invite_attempt(
+        user_id=user_id,
+        current_user=current_user,
+        role=role,
+    )
+    return SuccessResponseSchema(message="Сообщение отправлено пользователю на email")
+
+
+@router.post(
+    path="/confirm-invite",
+    description="Подтвердить инвайт как ребенка или верификатора для родителя",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessResponseSchema,
+    responses={
+        status.HTTP_200_OK: {"model": SuccessResponseSchema},
+        status.HTTP_403_FORBIDDEN: {"model": FailedResponseSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": FailedResponseSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": FailedResponseSchema},
+    },
+)
+async def confirm_invite(
+    token: str,
+    user_service: UserService = Depends(get_user_service),
+    current_user: CurrentUserSchema = Depends(
+        get_current_user_with_roles([RoleSlug.PARENT, RoleSlug.ADMIN])
+    ),
+):
+    await user_service.confirm_invite(token=token)
+    return SuccessResponseSchema(message="Успешный инвайт")

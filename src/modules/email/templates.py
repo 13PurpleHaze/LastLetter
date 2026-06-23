@@ -3,6 +3,9 @@ class EmailTemplates:
     VERIFICATION_TEXT = "Подтвердите email перейдя по ссылке: {link}"
 
     PASSWORD_RESET_SUBJECT = "Сброс пароля"
-    PASSWORD_RESET_TEXT = (
-        "Подтвердите сброс пароля перейдя по ссылке: <a href='{link}'>подтвердить</a>"
+    PASSWORD_RESET_TEXT = "Подтвердите сброс пароля перейдя по ссылке: {link}"
+
+    INVITE_SUBJECT = "Инвайт"
+    INVITE_TEXT = (
+        "Подтвердить инвайт пользователя с email: {email}, перейдя по ссылке: {link}"
     )
