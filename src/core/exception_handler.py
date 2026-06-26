@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from typing import Type
 from sqlalchemy.exc import DatabaseError
+from structlog import get_logger
 
 from api.v1.schemas.failed_response import FailedResponseSchema, FailedDetailSchema
 from modules.auth.exceptions import (
@@ -22,6 +23,8 @@ from modules.user.exceptions import (
     UserInactiveError,
     EmailAlreadyVerifiedError,
 )
+
+logger = get_logger("exception_handler")
 
 ERROR_MAPPING: dict[Type[AppException], dict] = {
     UserAlreadyExistsError: {
@@ -75,6 +78,36 @@ def exception_handler(app: FastAPI):
     ):
         error = ERROR_MAPPING.get(type(exc))
         if error:
+            status_code = error["status_code"]
+            code = error["code"]
+
+            if status_code >= 500:
+                logger.error(
+                    "App error",
+                    code=code,
+                    error=str(exc),
+                    path=request.url.path,
+                    method=request.method,
+                    client_ip=request.client.host if request.client else None,
+                    exc_info=True,
+                )
+            elif status_code >= 400:
+                logger.warning(
+                    "Client error",
+                    code=code,
+                    error=str(exc),
+                    path=request.url.path,
+                    method=request.method,
+                    client_ip=request.client.host if request.client else None,
+                )
+            else:
+                logger.info(
+                    "App exception",
+                    code=code,
+                    error=str(exc),
+                    path=request.url.path,
+                )
+
             return JSONResponse(
                 status_code=error["status_code"],
                 content=FailedResponseSchema(
@@ -89,6 +122,13 @@ def exception_handler(app: FastAPI):
         request: Request,
         exc: RequestValidationError,
     ):
+        logger.warning(
+            "Validation error",
+            errors=exc.errors(),
+            path=request.url.path,
+            method=request.method,
+            client_ip=request.client.host if request.client else None,
+        )
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content=FailedResponseSchema(
@@ -104,6 +144,15 @@ def exception_handler(app: FastAPI):
         request: Request,
         exc: DatabaseError,
     ):
+        logger.error(
+            "Database error",
+            error=str(exc),
+            code=getattr(exc, "code", None),
+            path=request.url.path,
+            method=request.method,
+            client_ip=request.client.host if request.client else None,
+            exc_info=True,
+        )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=FailedResponseSchema(

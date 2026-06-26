@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from structlog import get_logger
 
 from api.v1.schemas.failed_response import FailedResponseSchema
 from api.v1.schemas.success_response import SuccessResponseSchema
@@ -14,6 +15,7 @@ from modules.auth.service import AuthService
 from modules.user.schemas import CurrentUserSchema
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+logger = get_logger("capsule-time")
 
 
 @router.post(
@@ -87,6 +89,7 @@ async def login(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     tokens = await auth_service.login(user_login=user)
+    logger.info("User loggined", email=user.email)
     return SuccessResponseSchema(result=tokens)
 
 
