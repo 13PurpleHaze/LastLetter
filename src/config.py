@@ -38,6 +38,7 @@ class Settings(BaseSettings):
 
     # App
     BASE_URL: str
+    APP_NAME: str
 
     # RabbitMQ
     RABBITMQ_DEFAULT_USER: str
@@ -52,6 +53,9 @@ class Settings(BaseSettings):
     S3_BUCKET_NAME: str
     S3_REGION: str
     S3_FORCE_PATH_STYLE: bool
+
+    # OTEL
+    OTEL_EXPORTER_OTLP_ENDPOINT: str
 
     @field_validator("POSTGRES_DSN", mode="before")
     @classmethod
