@@ -12,7 +12,9 @@ from modules.auth.schemas import (
     UserPasswordConfirmSchema,
 )
 from modules.auth.service import AuthService
-from modules.user.schemas import CurrentUserSchema
+from modules.user.dependencies import get_user_service
+from modules.user.schemas import CurrentUserSchema, UserLightSchema, UserSchema
+from modules.user.service import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 logger = get_logger("capsule-time")
@@ -24,7 +26,7 @@ logger = get_logger("capsule-time")
     response_model=SuccessResponseSchema,
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_201_CREATED: {"model": SuccessResponseSchema[CurrentUserSchema]},
+        status.HTTP_201_CREATED: {"model": SuccessResponseSchema[UserLightSchema]},
         status.HTTP_409_CONFLICT: {"model": FailedResponseSchema},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": FailedResponseSchema},
     },
@@ -155,13 +157,15 @@ async def reset_password_confirm(
     description="Получить текущего пользователя",
     response_model=SuccessResponseSchema,
     responses={
-        status.HTTP_200_OK: {"model": SuccessResponseSchema},
+        status.HTTP_200_OK: {"model": SuccessResponseSchema[UserSchema]},
         status.HTTP_401_UNAUTHORIZED: {"model": FailedResponseSchema},
         status.HTTP_403_FORBIDDEN: {"model": FailedResponseSchema},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": FailedResponseSchema},
     },
 )
 async def get_me(
-    user: CurrentUserSchema = Depends(get_current_active_user),
+    current_user: CurrentUserSchema = Depends(get_current_active_user),
+    user_service: UserService = Depends(get_user_service),
 ):
+    user = await user_service.get_user_by_id(current_user.id)
     return SuccessResponseSchema(result=user)

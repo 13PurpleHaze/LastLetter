@@ -20,25 +20,30 @@ from modules.user.exceptions import (
     EmailNotVerifiedError,
     UserInactiveError,
 )
-from modules.user.factories import CurrentUserSchemaFactory
-from modules.user.schemas import CurrentUserSchema, UserUpdateSchema
+from modules.user.schemas import (
+    CurrentUserSchema,
+    UserLightSchema,
+    UserUpdateInternalSchema,
+)
 
 
 class AuthService:
     def __init__(self, user_service: UserService):
         self.user_service = user_service
 
-    async def register(self, user_register: UserRegisterSchema) -> CurrentUserSchema:
+    async def register(self, user_register: UserRegisterSchema) -> UserLightSchema:
         user_by_email = await self.user_service.get_user_by_email(
             email=str(user_register.email)
         )
         if user_by_email:
-            raise UserAlreadyExistsError(email=user_by_email.email)
+            raise UserAlreadyExistsError(email=str(user_by_email.email))
 
         user_create = AuthSchemaFactory.user_register_schema_to_user_create_schema(
             user=user_register
         )
         roles = AuthService.get_roles(user=user_register)
+        hashed_password = hash_password(user_create.password)
+        user_create.password = hashed_password
         user = await self.user_service.create_user(user_create=user_create, roles=roles)
         verification_link = AuthService.create_verification_link(user_id=user.id)
 
@@ -46,8 +51,7 @@ class AuthService:
             to_email=str(user.email),
             link=verification_link,
         )
-
-        return CurrentUserSchemaFactory.user_schema_to_current_user_schema(user=user)
+        return user
 
     async def login(self, user_login: UserLoginSchema) -> TokenSchema:
         user_by_email = await self.user_service.get_user_by_email(
@@ -63,10 +67,7 @@ class AuthService:
             hashed_password=user_by_email.password, password=user_login.password
         ):
             raise InvalidCredentialsError()
-        current_user = CurrentUserSchemaFactory.user_schema_to_current_user_schema(
-            user=user_by_email
-        )
-        return AuthService.create_auth_tokens(current_user=current_user)
+        return AuthService.create_auth_tokens(user_id=user_by_email.id)
 
     async def verify_email(self, token: str):
         try:
@@ -75,22 +76,26 @@ class AuthService:
             raise UnauthorizedError()
 
         user_id = int(decoded["sub"])
-        user = await self.user_service.get_user_by_id(user_id=user_id)
+        user = await self.user_service.get_user_with_roles_by_id(user_id=user_id)
         if not user:
-            raise UserNotFoundError(email=str(user_id))
+            raise UserNotFoundError()
+        if not user.is_active:
+            raise UserInactiveError(email=str(user.email))
         await self.user_service.update_user(
-            user_id=user.id, user_update=UserUpdateSchema(email_verified=True)
+            user_id=user_id,
+            user_update=UserUpdateInternalSchema(email_verified=True),
+            current_user=user,
         )
 
     async def resend_verification_link(self, user_verify: UserVerifySchema):
         user_by_email = await self.user_service.get_user_by_email(
             email=str(user_verify.email)
         )
-        if (
-            user_by_email
-            and user_by_email.is_active
-            and not user_by_email.email_verified
-        ):
+        if not user_by_email:
+            raise UserNotFoundError()
+        if not user_by_email.is_active:
+            raise UserInactiveError(email=str(user_by_email.email))
+        if not user_by_email.email_verified:
             link = AuthService.create_verification_link(user_id=user_by_email.id)
             send_verification_link_email_task.send(
                 to_email=str(user_by_email.email),
@@ -99,9 +104,13 @@ class AuthService:
 
     async def reset_password_call(self, email: str):
         user_by_email = await self.user_service.get_user_by_email(email=email)
-        if user_by_email and user_by_email.is_active:
-            link = AuthService.create_password_reset_link(user_id=user_by_email.id)
-            send_password_reset_email_task.send(link=link, to_email=email)
+        if not user_by_email:
+            raise UserNotFoundError()
+        if not user_by_email.is_active:
+            raise UserInactiveError(email=str(user_by_email.email))
+
+        link = AuthService.create_password_reset_link(user_id=user_by_email.id)
+        send_password_reset_email_task.send(link=link, to_email=email)
 
     async def confirm_reset_password(self, token: str, new_password: str):
         try:
@@ -109,19 +118,23 @@ class AuthService:
         except Exception:
             raise UnauthorizedError()
         user_id = int(decoded["sub"])
-        user = await self.user_service.get_user_by_id(user_id=user_id)
+        user = await self.user_service.get_user_with_roles_by_id(user_id=user_id)
         if not user:
-            raise UserNotFoundError(email=str(user_id))
+            raise UserNotFoundError()
         if not user.is_active:
-            raise UserInactiveError(email=str(user_id))
+            raise UserInactiveError(email=str(user.email))
+        if not user.email_verified:
+            raise EmailNotVerifiedError(email=str(user.email))
         hashed_password = hash_password(new_password)
         await self.user_service.update_user(
-            user_update=UserUpdateSchema(password=hashed_password), user_id=user_id
+            user_update=UserUpdateInternalSchema(password=hashed_password),
+            user_id=user_id,
+            current_user=user,
         )
 
     @staticmethod
     def refresh(current_user: CurrentUserSchema):
-        return AuthService.create_auth_tokens(current_user=current_user)
+        return AuthService.create_auth_tokens(user_id=current_user.id)
 
     @staticmethod
     def create_password_reset_link(user_id: int):
@@ -156,20 +169,21 @@ class AuthService:
         return verification_link
 
     @staticmethod
-    def create_auth_tokens(current_user: CurrentUserSchema) -> TokenSchema:
+    def create_auth_tokens(user_id: int) -> TokenSchema:
         payload = {
-            "sub": str(current_user.id),
-            "roles": [role.slug for role in current_user.roles],
+            "sub": str(user_id),
             "iat": datetime.now(timezone.utc),
         }
 
         access_payload = {
             **payload,
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            "exp": datetime.now(timezone.utc)
+            + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         }
         refresh_payload = {
             **payload,
-            "exp": datetime.now(timezone.utc) + timedelta(days=7),
+            "exp": datetime.now(timezone.utc)
+            + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         }
 
         access_token = encode_jwt(payload=access_payload)
@@ -183,7 +197,6 @@ class AuthService:
             token_type="Bearer",
         )
 
-    # Лучше собирать не id'шники, а названия и по ним уже в репозитории делать запрос
     @staticmethod
     def get_roles(user) -> list[str]:
         return [

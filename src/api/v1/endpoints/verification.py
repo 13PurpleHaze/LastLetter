@@ -8,7 +8,7 @@ from api.v1.schemas.pagination import ListResponseSchema, PaginationParams
 from api.v1.schemas.success_response import SuccessResponseSchema
 from core.constants import RoleSlug
 from modules.auth.dependencies import get_current_user_with_roles
-from modules.user.schemas import CurrentUserSchema
+from modules.user.schemas import CurrentUserSchema, UserLightSchema
 from modules.verification.dependencies import get_verification_service
 from modules.verification.service import VerificationService
 
@@ -17,10 +17,10 @@ router = APIRouter(prefix="/verification", tags=["Verification"])
 
 @router.get(
     path="/users",
-    description="Список пользователей(родителей) для верификации смерти для текущего пользователя(верификатора)",
+    description="Список пользователей (родителей) для верификации смерти для текущего пользователя (верификатора)",
     responses={
         status.HTTP_200_OK: {
-            "model": SuccessResponseSchema[ListResponseSchema[CurrentUserSchema]]
+            "model": SuccessResponseSchema[ListResponseSchema[UserLightSchema]],
         },
         status.HTTP_401_UNAUTHORIZED: {"model": FailedResponseSchema},
         status.HTTP_403_FORBIDDEN: {"model": FailedResponseSchema},
@@ -31,7 +31,7 @@ async def get_users_for_verification(
     pagination: Annotated[PaginationParams, Depends()],
     verification_service: VerificationService = Depends(get_verification_service),
     current_user: CurrentUserSchema = Depends(
-        get_current_user_with_roles([RoleSlug.VERIFIER, RoleSlug.ADMIN])
+        get_current_user_with_roles([RoleSlug.VERIFIER])
     ),
 ):
     users, meta = await verification_service.get_users(

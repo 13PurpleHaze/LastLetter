@@ -57,3 +57,20 @@ def send_user_invite_verification_email_task(link: str, to_email: str, from_emai
         title=EmailTemplates.INVITE_SUBJECT,
         text=EmailTemplates.INVITE_TEXT.format(email=from_email, link=link),
     )
+
+
+@dramatiq.actor(
+    queue_name="email_user_capsule",
+    max_retries=5,
+    min_backoff=30000,
+    max_backoff=600000,
+    time_limit=60000,
+)
+def send_user_capsule_email_task(capsule_name: str, user_name: str, to_email: str):
+    EmailService.send_email(
+        to_email=to_email,
+        title=EmailTemplates.CAPSULE_SUBJECT,
+        text=EmailTemplates.CAPSULE_TEXT.format(
+            user_name=user_name, capsule_name=capsule_name
+        ),
+    )

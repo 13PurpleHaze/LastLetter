@@ -1,6 +1,5 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime
 
 from .base import Base
 
@@ -15,7 +14,3 @@ class UserCapsule(Base):
         ForeignKey("capsules.id", onupdate="CASCADE", ondelete="CASCADE"),
         primary_key=True,
     )
-
-    send_at: Mapped[datetime | None]
-    sent_at: Mapped[datetime | None]
-    is_sent: Mapped[bool] = mapped_column(default=False)

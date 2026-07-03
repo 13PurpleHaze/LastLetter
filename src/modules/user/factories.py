@@ -1,61 +1,58 @@
 from infrastructure.db.models import User, Role
-from .schemas import UserSchema, RoleSchema, CurrentUserSchema, FamilyMemberSchema
+from .schemas import (
+    UserSchema,
+    RoleSchema,
+    CurrentUserSchema,
+    UserLightSchema,
+    UserAuthSchema,
+)
 
 
 class UserSchemaFactory:
     @classmethod
     def model_to_schema(cls, user: User) -> UserSchema:
-        print(user)
         return UserSchema(
             id=user.id,
             email=user.email,
             first_name=user.first_name,
-            password=user.password,
             date_of_birth=user.date_of_birth,
             is_deceased=user.is_deceased,
-            is_active=user.is_active,
             email_verified=user.email_verified,
             created_at=user.created_at,
             updated_at=user.updated_at,
-            verificator_id=user.verificator_id,
+            verificator=(
+                UserLightSchemaFactory.model_to_schema(user=user.verificator)
+                if user.verificator
+                else None
+            ),
             family=[
-                FamilyMemberSchemaFactory.model_to_schema(fm)
+                UserLightSchemaFactory.model_to_schema(fm)
                 for fm in user.parents + user.children
             ],
             roles=[RoleSchemaFactory.model_to_schema(role) for role in user.roles],
         )
 
 
-class CurrentUserSchemaFactory:
+class UserLightSchemaFactory:
     @staticmethod
-    def user_schema_to_current_user_schema(user: UserSchema) -> CurrentUserSchema:
-        return CurrentUserSchema(
+    def model_to_schema(user: User) -> UserLightSchema:
+        return UserLightSchema(
             id=user.id,
             email=user.email,
             first_name=user.first_name,
-            date_of_birth=user.date_of_birth,
-            roles=user.roles,
-            is_active=user.is_active,
-            email_verified=user.email_verified,
-            family=user.family,
             is_deceased=user.is_deceased,
-            verificator_id=user.verificator_id,
         )
 
+
+class CurrentUserSchemaFactory:
     @staticmethod
     def model_to_schema(user: User) -> CurrentUserSchema:
         return CurrentUserSchema(
             id=user.id,
-            email=user.email,
-            first_name=user.first_name,
-            date_of_birth=user.date_of_birth,
             is_active=user.is_active,
             email_verified=user.email_verified,
-            family=[
-                FamilyMemberSchemaFactory.model_to_schema(fm)
-                for fm in user.parents + user.children
-            ],
-            is_deceased=user.is_deceased,
+            first_name=user.first_name,
+            email=user.email,
             verificator_id=user.verificator_id,
             roles=[RoleSchemaFactory.model_to_schema(role) for role in user.roles],
         )
@@ -71,12 +68,13 @@ class RoleSchemaFactory:
         )
 
 
-class FamilyMemberSchemaFactory:
+class UserAuthSchemaFactory:
     @staticmethod
-    def model_to_schema(user: User) -> FamilyMemberSchema:
-        return FamilyMemberSchema(
+    def model_to_schema(user: User) -> UserAuthSchema:
+        return UserAuthSchema(
             id=user.id,
+            password=user.password,
+            email_verified=user.email_verified,
+            is_active=user.is_active,
             email=user.email,
-            first_name=user.first_name,
-            roles=[RoleSchemaFactory.model_to_schema(role) for role in user.roles],
         )
