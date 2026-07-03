@@ -1,6 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel, field_validator, ValidationError
-from modules.user.schemas import CurrentUserSchema
+from pydantic import BaseModel
+from modules.user.schemas import UserLightSchema
 
 
 class ContentSchema(BaseModel):
@@ -9,16 +9,28 @@ class ContentSchema(BaseModel):
     content_type: str
     size_bytes: int
     order_index: int
+    capsule_id: int
 
 
-## Capsule
-class CapsuleSchema(BaseModel):
+# Capsule
+class CapsuleLightSchema(BaseModel):
     id: int
     title: str
     text: str | None
+    send_at: datetime | None
     creator_id: int
-    users: list[CurrentUserSchema]
+    created_at: datetime
+    updated_at: datetime
+
+
+class CapsuleSchema(BaseModel):
+    id: int
+    title: str
+    text: str | None = None
+    creator: UserLightSchema
+    users: list[UserLightSchema]
     contents: list[ContentSchema]
+    send_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -30,18 +42,6 @@ class CapsuleCreateSchema(BaseModel):
 
 class CapsuleUserAttachSchema(BaseModel):
     user_id: int
-    send_at: datetime | None = None
-
-
-class CapsuleUpdateDateSchema(BaseModel):
-    send_at: datetime
-
-    @field_validator("send_at")
-    @classmethod
-    def validate_send_at(cls, v):
-        if v < datetime.now():
-            raise ValidationError("Поле send_at должно быть больше текущей даты")
-        return v
 
 
 class CapsuleFilterSchema(BaseModel):
@@ -72,11 +72,13 @@ class ContentCreateSchema(BaseModel):
 class CapsuleUpdateSchema(BaseModel):
     title: str | None = None
     text: str | None = None
+    send_at: datetime | None = None
 
 
-class CapsuleUserSchema(BaseModel):
+class UserCapsuleSchema(BaseModel):
     capsule_id: int
     user_id: int
-    send_at: datetime | None
-    sent_at: datetime | None
-    is_sent: bool
+
+
+class CapsuleUpdateInternalSchema(CapsuleUpdateSchema):
+    sent_at: datetime | None = None

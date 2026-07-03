@@ -13,6 +13,12 @@ class ContentNotFoundError(AppException):
         super().__init__(f"Контент с id {content_id} не найден")
 
 
+class ObjectNotFoundError(AppException):
+    def __init__(self, object_key: str):
+        self.object_key = object_key
+        super().__init__(f"Объект с key {object_key} не найден, либо еще не загружен")
+
+
 # TODO: вынести отсюда в auth
 class PermissionDeniedError(AppException):
     def __init__(self):

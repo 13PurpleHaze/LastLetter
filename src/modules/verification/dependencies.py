@@ -1,10 +1,17 @@
 from fastapi.params import Depends
 
+from modules.capsules.dependencies import get_capsule_service
+from modules.capsules.service import CapsuleService
 from modules.user.dependencies import get_user_service
 from modules.user.service import UserService
 from modules.verification.service import VerificationService
 
 
-def get_verification_service(user_service: UserService = Depends(get_user_service)):
-    verification_service = VerificationService(user_service=user_service)
+def get_verification_service(
+    user_service: UserService = Depends(get_user_service),
+    capsule_service: CapsuleService = Depends(get_capsule_service),
+):
+    verification_service = VerificationService(
+        user_service=user_service, capsule_service=capsule_service
+    )
     return verification_service

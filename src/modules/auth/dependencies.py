@@ -5,7 +5,6 @@ from .service import AuthService
 from modules.user.dependencies import get_user_service
 from modules.user.schemas import CurrentUserSchema
 from modules.user.service import UserService
-from ..user.factories import CurrentUserSchemaFactory
 
 
 def get_auth_service(user_service: UserService = Depends(get_user_service)):
@@ -21,10 +20,12 @@ async def get_current_user(
     except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     user_id = int(token["sub"])
-    user = await user_service.get_user_by_id(user_id=user_id)
+    user = await user_service.get_user_with_roles_by_id(user_id=user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    return CurrentUserSchemaFactory.user_schema_to_current_user_schema(user)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+    return user
 
 
 def get_current_active_user(
@@ -47,7 +48,7 @@ def get_current_user_with_roles(
         if not any(role in user_roles for role in allowed_roles):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Required one of roles: {allowed_roles}",
+                detail=f"Требуются роли: {allowed_roles}",
             )
         return user
 

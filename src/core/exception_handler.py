@@ -15,6 +15,7 @@ from modules.capsules.exceptions import (
     PermissionDeniedError,
     CapsuleNotFoundError,
     ContentNotFoundError,
+    ObjectNotFoundError,
 )
 from modules.user.exceptions import (
     UserAlreadyExistsError,
@@ -66,6 +67,10 @@ ERROR_MAPPING: dict[Type[AppException], dict] = {
     ContentNotFoundError: {
         "status_code": status.HTTP_404_NOT_FOUND,
         "code": "not_found",
+    },
+    ObjectNotFoundError: {
+        "status_code": status.HTTP_404_NOT_FOUND,
+        "code": "object_not_found",
     },
 }
 

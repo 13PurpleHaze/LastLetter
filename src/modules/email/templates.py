@@ -9,3 +9,8 @@ class EmailTemplates:
     INVITE_TEXT = (
         "Подтвердить инвайт пользователя с email: {email}, перейдя по ссылке: {link}"
     )
+
+    CAPSULE_SUBJECT = "Новая капсула"
+    CAPSULE_TEXT = (
+        "Вам доступна капсула с именем '{capsule_name}', от пользователя '{user_name}'"
+    )

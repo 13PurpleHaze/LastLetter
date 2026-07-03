@@ -18,11 +18,16 @@ class Capsule(Base):
     title: Mapped[str] = mapped_column(String(20))
     text: Mapped[str | None]
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    send_at: Mapped[datetime | None]
+    sent_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
     users: Mapped[list["User"]] = relationship(
         secondary="user_capsule", back_populates="capsules"
+    )
+    creator: Mapped["User"] = relationship(
+        foreign_keys=[creator_id],
     )
     contents: Mapped[list["Content"]] = relationship(back_populates="capsule")
