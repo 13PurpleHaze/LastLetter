@@ -54,6 +54,8 @@ class CurrentUserSchemaFactory:
             first_name=user.first_name,
             email=user.email,
             verificator_id=user.verificator_id,
+            date_of_birth=user.date_of_birth,
+            is_deceased=user.is_deceased,
             roles=[RoleSchemaFactory.model_to_schema(role) for role in user.roles],
         )
 
@@ -77,4 +79,7 @@ class UserAuthSchemaFactory:
             email_verified=user.email_verified,
             is_active=user.is_active,
             email=user.email,
+            first_name=user.first_name,
+            date_of_birth=user.date_of_birth,
+            is_deceased=user.is_deceased,
         )

@@ -55,22 +55,6 @@ class CapsuleRepository:
             for capsule in capsules
         ], total
 
-    async def get_capsule_by_recipient_by_id(
-        self, capsule_id: int, recipient_id
-    ) -> CapsuleSchema | None:
-        creator = aliased(User)
-        stmt = (
-            select(Capsule)
-            .where(Capsule.id == capsule_id)
-            .join(User.capsules)
-            .where(User.id == recipient_id)
-            .join(creator, creator.id == Capsule.creator_id)
-            .where(creator.is_deceased, datetime.now() > Capsule.send_at)
-        )
-        result = await self.session.execute(stmt)
-        capsule = result.scalar_one_or_none()
-        return CapsuleSchemaFactory.model_to_schema(capsule) if capsule else None
-
     async def get_capsules_by_creator(
         self,
         creator_id: int,

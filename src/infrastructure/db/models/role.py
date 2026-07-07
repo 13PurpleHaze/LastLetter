@@ -15,3 +15,6 @@ class Role(Base):
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
+
+    def __str__(self) -> str:
+        return f"{self.slug}"

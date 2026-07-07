@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     S3_BUCKET_NAME: str
     S3_REGION: str
     S3_FORCE_PATH_STYLE: bool
+    S3_LINK_EXPIRE_MINUTES: int
 
     # OTEL
     OTEL_EXPORTER_OTLP_ENDPOINT: str

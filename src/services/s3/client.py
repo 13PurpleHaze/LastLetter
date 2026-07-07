@@ -34,7 +34,7 @@ class S3Client:
         self,
         object_key: str,
         content_type: str,
-        expires_in: int = 300,
+        expires_in: int = settings.S3_LINK_EXPIRE_MINUTES * 60,
     ) -> str:
         async with self._client() as s3:
             url = await s3.generate_presigned_url(
@@ -52,7 +52,7 @@ class S3Client:
     async def generate_download_url(
         self,
         object_key: str,
-        expires_in: int = 3600,
+        expires_in: int = settings.S3_LINK_EXPIRE_MINUTES * 60,
     ) -> str:
         async with self._client() as s3:
             url = await s3.generate_presigned_url(

@@ -148,6 +148,7 @@ services:
       - "9090:9090"
     volumes:
       - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
     networks:
       - observability-net
   grafana:
@@ -229,6 +230,7 @@ volumes:
   garage-data:
   garage-meta:
   rabbitmq-data:
+  prometheus_data:
   grafana-storage:
   loki_data:
   loki_chunks:

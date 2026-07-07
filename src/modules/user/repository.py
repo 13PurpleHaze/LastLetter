@@ -145,24 +145,6 @@ class UserRepository:
                 if hasattr(user, key):
                     setattr(user, key, value)
 
-            # if user_update.email is not None:
-            #     user.email = str(user_update.email)
-            #     user.email_verified = False
-            # if user_update.first_name is not None:
-            #     user.first_name = user_update.first_name
-            # if user_update.date_of_birth:
-            #     user.date_of_birth = datetime.combine(
-            #         user_update.date_of_birth, datetime.now().time()
-            #     )
-            # if user_update.password is not None:
-            #     user.password = user_update.password
-            # if user_update.email_verified is not None:
-            #     user.email_verified = user_update.email_verified
-            # if user_update.is_deceased is not None:
-            #     user.is_deceased = user_update.is_deceased
-            # if user_update.verificator_id is not None:
-            #     user.verificator_id = user_update.verificator_id
-
             await self.session.commit()
             await self.session.refresh(user)
             return UserSchemaFactory.model_to_schema(user=user)

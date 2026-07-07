@@ -60,3 +60,6 @@ class User(Base):
         back_populates="children",
         lazy="selectin",
     )
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.email}"

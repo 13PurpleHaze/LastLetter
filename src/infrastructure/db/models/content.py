@@ -24,3 +24,6 @@ class Content(Base):
         server_default=func.now(), onupdate=func.now()
     )
     capsule: Mapped["Capsule"] = relationship(back_populates="contents")
+
+    def __str__(self) -> str:
+        return f"{self.object_key}"
