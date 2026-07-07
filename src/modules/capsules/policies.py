@@ -1,3 +1,5 @@
+from typing import TypeVar
+
 from modules.capsules.exceptions import (
     CapsuleNotFoundError,
     CapsuleNotAccessibleError,
@@ -7,8 +9,16 @@ from modules.capsules.schemas import CapsuleLightSchema, CapsuleSchema, ContentS
 from modules.user.schemas import UserInternalSchema, CurrentUserSchema
 from datetime import datetime
 
+T = TypeVar("T", bound=CapsuleLightSchema)
+
 
 class CapsulePolicy:
+    @staticmethod
+    def _capsule_exists(capsule: T | None, capsule_id: int) -> T:
+        if not capsule:
+            raise CapsuleNotFoundError(capsule_id=capsule_id)
+        return capsule
+
     @staticmethod
     def _user_creator(user_id: int, creator_id: int) -> bool:
         return creator_id == user_id
@@ -21,8 +31,7 @@ class CapsulePolicy:
     def can_view(
         user: CurrentUserSchema, capsule: CapsuleSchema | None, capsule_id: int
     ):
-        if not capsule:
-            raise CapsuleNotFoundError(capsule_id=capsule_id)
+        capsule = CapsulePolicy._capsule_exists(capsule=capsule, capsule_id=capsule_id)
         is_creator = CapsulePolicy._user_creator(
             user_id=user.id, creator_id=capsule.creator.id
         )
@@ -39,8 +48,7 @@ class CapsulePolicy:
     def can_interact(
         capsule: CapsuleLightSchema | None, capsule_id: int, user: UserInternalSchema
     ) -> CapsuleLightSchema:
-        if not capsule:
-            raise CapsuleNotFoundError(capsule_id=capsule_id)
+        capsule = CapsulePolicy._capsule_exists(capsule=capsule, capsule_id=capsule_id)
         is_creator = CapsulePolicy._user_creator(capsule.creator_id, user.id)
         if not is_creator:
             raise CapsuleNotAccessibleError(capsule_id=capsule_id, user_id=user.id)
