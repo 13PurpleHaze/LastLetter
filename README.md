@@ -1,3 +1,41 @@
+# LastLetter
+
+## About The Project
+
+LastLetter — это REST API, на базе FastAPI.
+Проект предоставляет механизм создания и управления капсулами,
+которые становятся доступными указанным пользователям при наступлении
+определённых условий.
+
+**Функционал:**
+* Регистрация и аутентификация пользователей.
+* Сброс пароля.
+* Управление профилем пользователя.
+* Подтверждение email при регистрации
+* Email-уведомления о регистрации и сбросе пароля.
+* Система ролей пользователей:
+  * Родитель — создатель и владелец капсул.
+  * Ребёнок — получатель доступа к капсулам при выполнении заданных условий.
+  * Верификатор — пользователь, подтверждающий наступление события.
+* Управление капсулами (создание, наполнение, просмотр, обновление, привязка пользователей)
+* Генерация ссылок для загрузки фото и видео в капсулы и просмотра;
+* Система инвайтов и связей между пользователями (родитель ↔ ребёнок, родитель ↔ верификатор)
+
+## Built With
+
+Проект создан с использованием следующих технологий:
+
+* ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+* ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)
+* ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+* ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+* ![Dramatiq](https://img.shields.io/badge/Dramatiq-5E35B1?style=for-the-badge)
+* ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
+* ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
+![Grafana Tempo](https://img.shields.io/badge/Grafana_Tempo-F46800?style=for-the-badge&logo=grafana&logoColor=white)
+![Grafana Loki](https://img.shields.io/badge/Grafana_Loki-F46800?style=for-the-badge&logo=grafana&logoColor=white)
+
+
 ## Get started
 
 ### 1. Клонируй репозиторий
