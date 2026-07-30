@@ -8,14 +8,16 @@ from structlog import get_logger
 from api.v1.schemas.failed_response import FailedResponseSchema, FailedDetailSchema
 from modules.auth.exceptions import (
     AppException,
-    UnauthorizedError,
     InvalidCredentialsError,
+    InvalidTokenError,
 )
 from modules.capsules.exceptions import (
-    PermissionDeniedError,
     CapsuleNotFoundError,
     ContentNotFoundError,
     ObjectNotFoundError,
+    CapsuleNotAccessibleError,
+    CapsuleNotAllowAttachUser,
+    CapsuleNotAllowedExtension,
 )
 from modules.user.exceptions import (
     UserAlreadyExistsError,
@@ -23,11 +25,15 @@ from modules.user.exceptions import (
     EmailNotVerifiedError,
     UserInactiveError,
     EmailAlreadyVerifiedError,
+    UserNotAllowedError,
+    UserInvalidRoleError,
 )
+from modules.verification.exceptions import InvalidVerificator
 
 logger = get_logger("exception_handler")
 
 ERROR_MAPPING: dict[Type[AppException], dict] = {
+    ## User
     UserAlreadyExistsError: {
         "status_code": status.HTTP_409_CONFLICT,
         "code": "user_already_exists",
@@ -44,22 +50,28 @@ ERROR_MAPPING: dict[Type[AppException], dict] = {
         "status_code": status.HTTP_403_FORBIDDEN,
         "code": "user_inactive",
     },
-    UnauthorizedError: {
-        "status_code": status.HTTP_401_UNAUTHORIZED,
-        "code": "unauthorized",
-    },
     EmailAlreadyVerifiedError: {
         "status_code": status.HTTP_409_CONFLICT,
         "code": "email_already_verified",
     },
+    UserNotAllowedError: {
+        "status_code": status.HTTP_403_FORBIDDEN,
+        "code": "user_not_allowed",
+    },
+    UserInvalidRoleError: {
+        "status_code": status.HTTP_404_NOT_FOUND,
+        "code": "user_not_found",
+    },
+    ### Auth
     InvalidCredentialsError: {
         "status_code": status.HTTP_401_UNAUTHORIZED,
         "code": "invalid_credentials",
     },
-    PermissionDeniedError: {
-        "status_code": status.HTTP_403_FORBIDDEN,
-        "code": "permission_denied",
+    InvalidTokenError: {
+        "status_code": status.HTTP_401_UNAUTHORIZED,
+        "code": "invalid_token",
     },
+    ## Capsules
     CapsuleNotFoundError: {
         "status_code": status.HTTP_404_NOT_FOUND,
         "code": "not_found",
@@ -71,6 +83,23 @@ ERROR_MAPPING: dict[Type[AppException], dict] = {
     ObjectNotFoundError: {
         "status_code": status.HTTP_404_NOT_FOUND,
         "code": "object_not_found",
+    },
+    CapsuleNotAccessibleError: {
+        "status_code": status.HTTP_403_FORBIDDEN,
+        "code": "not_accessible",
+    },
+    CapsuleNotAllowAttachUser: {
+        "status_code": status.HTTP_403_FORBIDDEN,
+        "code": "not_allow_attach_user",
+    },
+    CapsuleNotAllowedExtension: {
+        "status_code": status.HTTP_403_FORBIDDEN,
+        "code": "not_allow_extension",
+    },
+    ## Verification
+    InvalidVerificator: {
+        "status_code": status.HTTP_403_FORBIDDEN,
+        "code": "invalid_verificator",
     },
 }
 
@@ -104,13 +133,6 @@ def exception_handler(app: FastAPI):
                     path=request.url.path,
                     method=request.method,
                     client_ip=request.client.host if request.client else None,
-                )
-            else:
-                logger.info(
-                    "App exception",
-                    code=code,
-                    error=str(exc),
-                    path=request.url.path,
                 )
 
             return JSONResponse(

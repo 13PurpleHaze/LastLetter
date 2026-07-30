@@ -11,7 +11,7 @@ from modules.auth.schemas import (
     TokenSchema,
     UserPasswordConfirmSchema,
 )
-from modules.auth.service import AuthService
+from modules.auth.services.auth_service import AuthService
 from modules.user.dependencies import get_user_service
 from modules.user.schemas import CurrentUserSchema, UserLightSchema, UserSchema
 from modules.user.service import UserService

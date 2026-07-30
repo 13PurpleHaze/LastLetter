@@ -1,13 +1,9 @@
 import dramatiq
-from dramatiq.brokers.rabbitmq import RabbitmqBroker
 
-from config import settings
 from modules.email.service import EmailService
 from modules.email.templates import EmailTemplates
+from infrastructure.rabbit.broker import broker
 
-broker = RabbitmqBroker(
-    host=settings.RABBITMQ_DEFAULT_HOST, port=settings.RABBITMQ_DEFAULT_PORT
-)
 dramatiq.set_broker(broker)
 
 

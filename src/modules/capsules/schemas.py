@@ -23,16 +23,10 @@ class CapsuleLightSchema(BaseModel):
     updated_at: datetime
 
 
-class CapsuleSchema(BaseModel):
-    id: int
-    title: str
-    text: str | None = None
+class CapsuleSchema(CapsuleLightSchema):
     creator: UserLightSchema
     users: list[UserLightSchema]
     contents: list[ContentSchema]
-    send_at: datetime | None = None
-    created_at: datetime
-    updated_at: datetime
 
 
 class CapsuleCreateSchema(BaseModel):

@@ -6,6 +6,6 @@ class InvalidCredentialsError(AppException):
         super().__init__("Неверные email или пароль")
 
 
-class UnauthorizedError(AppException):
+class InvalidTokenError(AppException):
     def __init__(self):
-        super().__init__("Unauthorized")
+        super().__init__("Invalid token")

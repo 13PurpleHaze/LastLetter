@@ -2,12 +2,8 @@ from core.app_exception import AppException
 
 
 class UserNotFoundError(AppException):
-    def __init__(self, email: str | None = None):
-        self.email = email
-        if not email:
-            super().__init__("Пользователь не найден")
-        else:
-            super().__init__(f"Пользователь с email {email} не найден")
+    def __init__(self):
+        super().__init__("Пользователь не найден")
 
 
 class EmailNotVerifiedError(AppException):
@@ -32,3 +28,20 @@ class UserInactiveError(AppException):
     def __init__(self, email: str):
         self.email = email
         super().__init__(f"Пользователь с email {email} заблокирован")
+
+
+class UserNotAllowedError(AppException):
+    def __init__(self, email: str):
+        self.email = email
+        super().__init__(
+            f"Данное действие нельзя применить пользователю с email {email}"
+        )
+
+
+class UserInvalidRoleError(AppException):
+    def __init__(self, email: str, roles: list[str]):
+        self.email = email
+        self.roles = roles
+        super().__init__(
+            f"Пользователь с email: {email} не содержит нужных ролей: {roles}"
+        )

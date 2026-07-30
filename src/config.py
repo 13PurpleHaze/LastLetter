@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         extra="allow",
         case_sensitive=True,
-        env_file=str(Path.cwd().parent / ".env"),
+        env_file=str(Path(__file__).resolve().parent.parent / ".env"),
     )
     BASE_DIR: Path = Path.cwd().parent
     CURRENT_DIR: Path = Path.cwd()
@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     S3_BUCKET_NAME: str
     S3_REGION: str
     S3_FORCE_PATH_STYLE: bool
+    S3_LINK_EXPIRE_MINUTES: int
 
     # OTEL
     OTEL_EXPORTER_OTLP_ENDPOINT: str

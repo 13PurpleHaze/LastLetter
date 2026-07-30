@@ -56,19 +56,20 @@ class UserUpdateInternalSchema(UserUpdateSchema):
     is_deceased: bool | None = None
 
 
-class CurrentUserSchema(BaseModel):
+class UserInternalSchema(BaseModel):
     id: int
-    is_active: bool
-    email_verified: bool
     first_name: str
-    verificator_id: int | None = None
-    email: EmailStr
-    roles: list[RoleSchema]
-
-
-class UserAuthSchema(BaseModel):
-    id: int
+    email: str
+    date_of_birth: date
+    is_deceased: bool
     email_verified: bool
-    password: str
-    email: EmailStr
     is_active: bool
+
+
+class CurrentUserSchema(UserInternalSchema):
+    roles: list[RoleSchema]
+    verificator_id: int | None
+
+
+class UserAuthSchema(UserInternalSchema):
+    password: str

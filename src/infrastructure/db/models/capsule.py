@@ -31,3 +31,6 @@ class Capsule(Base):
         foreign_keys=[creator_id],
     )
     contents: Mapped[list["Content"]] = relationship(back_populates="capsule")
+
+    def __str__(self) -> str:
+        return f"Capsule({self.title})"

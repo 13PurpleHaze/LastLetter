@@ -19,7 +19,20 @@ class ObjectNotFoundError(AppException):
         super().__init__(f"Объект с key {object_key} не найден, либо еще не загружен")
 
 
-# TODO: вынести отсюда в auth
-class PermissionDeniedError(AppException):
-    def __init__(self):
-        super().__init__("Доступ запрещен")
+class CapsuleNotAccessibleError(AppException):
+    def __init__(self, capsule_id: int, user_id: int):
+        super().__init__(
+            f"Пользователь {user_id} не имеет доступа к капсуле {capsule_id}"
+        )
+
+
+class CapsuleNotAllowAttachUser(AppException):
+    def __init__(self, capsule_id: int, user_id: int):
+        super().__init__(
+            f"Пользователя {user_id} нельзя добавить к капсуле {capsule_id}"
+        )
+
+
+class CapsuleNotAllowedExtension(AppException):
+    def __init__(self, ext: str):
+        super().__init__(f"{ext} не поддерживается")

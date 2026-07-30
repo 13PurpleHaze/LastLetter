@@ -41,6 +41,7 @@ class CapsuleSchemaFactory:
             created_at=capsule.created_at,
             updated_at=capsule.updated_at,
             send_at=capsule.send_at,
+            creator_id=capsule.creator_id,
             users=[
                 UserLightSchemaFactory.model_to_schema(user) for user in capsule.users
             ],
