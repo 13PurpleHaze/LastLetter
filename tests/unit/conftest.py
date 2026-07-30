@@ -10,6 +10,8 @@ def user_service():
 
     service.get_user_by_email = AsyncMock()
     service.create_user = AsyncMock()
+    service.get_user_with_roles_by_id = AsyncMock()
+    service.update_user = AsyncMock()
 
     return service
 
