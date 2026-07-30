@@ -7,19 +7,30 @@ LastLetter — это REST API, на базе FastAPI.
 которые становятся доступными указанным пользователям при наступлении
 определённых условий.
 
-**Функционал:**
-* Регистрация и аутентификация пользователей.
-* Сброс пароля.
-* Управление профилем пользователя.
-* Подтверждение email при регистрации
-* Email-уведомления о регистрации и сбросе пароля.
-* Система ролей пользователей:
-  * Родитель — создатель и владелец капсул.
-  * Ребёнок — получатель доступа к капсулам при выполнении заданных условий.
-  * Верификатор — пользователь, подтверждающий наступление события.
-* Управление капсулами (создание, наполнение, просмотр, обновление, привязка пользователей)
-* Генерация ссылок для загрузки фото и видео в капсулы и просмотра;
-* Система инвайтов и связей между пользователями (родитель ↔ ребёнок, родитель ↔ верификатор)
+## **Функционал:**
+### Authentication & Users
+- Регистрация пользователей
+- JWT-аутентификация
+- Подтверждение email
+- Сброс пароля
+- Управление профилем пользователя
+### User Roles
+- Parent — создатель и владелец капсул
+- Child — пользователь, получающий доступ к капсулам при выполнении условий
+- Verifier — пользователь, подтверждающий наступление события
+### Relationships
+- Связи между пользователями: Parent ↔ Child Parent ↔ Verifier
+- Система инвайтов для создания связей
+### Capsules
+- Создание и управление капсулами
+- Добавление пользователей к капсулам
+- Наполнение капсул сообщениями и медиафайлами
+- Генерация ссылок для: загрузки фото и видео; просмотра содержимого капсул
+### Notifications
+Email-уведомления:
+- подтверждение регистрации;
+- восстановление пароля;
+- отправка ссылок доступа
 
 ## Built With
 
@@ -38,53 +49,131 @@ LastLetter — это REST API, на базе FastAPI.
 
 ## Get started
 
+### 0. Установи необходимые зависимости
+Перед запуском необходимо установить [Docker](https://docs.docker.com/)
+
 ### 1. Клонируй репозиторий
 
 ```bash
-git clone https://github.com/your-username/capsule-time.git
-cd capsule-time
+git clone https://github.com/13PurpleHaze/LastLetter.git
+cd LastLetter
 ```
 
 ### 2. Сгенерируйте ключи
+Ключи для аутентификации:
 ```bash
 mkdir -p certs secrets
 openssl genrsa -out secrets/private.pem 2048
 openssl rsa -in secrets/private.pem -outform PEM -pubout -out certs/public.pem
 ```
-Сгенерируйте metrics_token, admin_token, rpc_secret для garage и запишите их в garage.toml и monitoring/prometheus.yml
+Ключи для metrics_token, admin_token, rpc_secret для garage.
 ```bash
 openssl rand -hex 32
 ```
+запишите их в garage.toml и monitoring/prometheus.yml
+```toml
+## garage.toml
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+rpc_secret = "..." <- сюда
+...
+api_bind_addr = "0.0.0.0:3903"
+admin_token = "..." <- сюда
+metrics_token = "..." <- сюда
+```
 
-### 3. Запустите проект
-Часть сервисов не будет работать, этот шаг нужен чтобы настроить garage
+```yml
+## monitoring/prometheus.yml
+...
+  - job_name: 'garage'
+    static_configs:
+      - targets:
+          - 'garage:3903'
+    authorization:
+      type: Bearer
+      credentials: '...' <- сюда
+```
+
+
+### 3. Сконфигурируйте garage
+Нам нужно создать 2 бакета: первый для медиафайлов капсул, второй для трейсов. Для этого нужно пройти эти шаги
+
+Запустите контейнер только с garage
+```bash
+docker compose -f=docker/docker-compose.yml --env-file=.env up garage 
+```
+Получите ID узла
+```bash
+docker compose -f=docker/docker-compose.yml --env-file=.env exec garage /garage status
+...
+==== HEALTHY NODES ====
+ID                Hostname      Address         Tags  Zone  Capacity          DataAvail  Version
+4619a172fdcf58a0  0080c32bcdbf  127.0.0.1:3901              NO ROLE ASSIGNED             v2.3.0
+```
+Допустим наш ID это 4619a172fdcf58a0.
+Далее создаем layout и применяем
+```bash
+docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
+  /garage layout assign -z dc1 -c 1G 4619a172fdcf58a0
+  
+docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
+  /garage layout apply --version 1
+```
+Создаем bucket. Его имя запишем в .env в `S3_BUCKET_NAME`
+```bash
+docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
+  /garage bucket create ИМЯ_БАКЕТА
+...
+==== BUCKET INFORMATION ====
+Bucket:          f3ee6831e885de553f78715c4dc239b251829c66e71c93244ca82c3be18d2f51
+Created:         2026-07-30 05:11:42.127 +00:00
+
+Size:            0 B (0 B)
+Objects:         0
+
+Website access:  false
+
+Global alias:    lastletter
+
+==== KEYS FOR THIS BUCKET ====
+Permissions  Access key    Local aliases
+```
+Создаем ключи. Сохраняем Key ID и Secret key в .env файл поля `S3_ACCESS_KEY` и `S3_SECRET_KEY` соответственно.
+```bash
+docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
+  /garage key create ИМЯ_КЛЮЧА
+...
+==== ACCESS KEY INFORMATION ====
+Key ID:              GKc3721315ddaaad62efa155da
+Key name:            ...
+Secret key:          7fc5da3dfa32ad5de68cd0e8d170aa6f74cc601f7589d94c3b51cb21ea607ce7
+Created:             2026-07-30 05:14:23.831 +00:00
+Validity:            valid
+Expiration:          never
+
+Can create buckets:  false
+
+==== BUCKETS FOR THIS KEY ====
+Permissions  ID  Global aliases  Local aliases
+```
+Назначем ключи на наш созданный bucket
+```bash
+docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
+  /garage bucket allow --read --write --key ИМЯ_КЛЮЧА ИМЯ_БАКЕТА
+```
+Абсолютно аналогично делаем и для бакетов для трейсов, только не создаем новый layout, а только бакеты и записываем результаты в `TRACE_S3_ACCESS_KEY`, `TRACE_S3_BUCKET_NAME`, `TRACE_S3_SECRET_KEY` 
+
+Останови контейнер с garage
+```bash
+docker compose -f=docker/docker-compose.yml --env-file=.env stop garage
+```
+
+### 4. Собери проект
 ```bash
 make deploy
 ```
 
-### 4. Настройте Garage
-Создайте бакет для медиа и трейсов(разные), далее создайте ключи и назначте их
+### 5. Запусти воркер dramatiq в контейнере с приложением
 ```bash
-docker compose exec garage /garage bucket create [имя бакета]
-docker compose exec garage /garage key create [имя ключа]
-docker compose exec garage /garage bucket allow --read --write --key [имя ключа] [имя бакета]
-```
-Ключи запишите в .env файл проекта
-
-
-### 4. Настройте переменные окружения
-Имена бакетов, регионы, ключи
-```bash
-cp .env.example .env
-```
-
-### 5. Пересоберите проект
-```bash
-make stop
-make deploy
-```
-
-### 6. Запустите воркер dramatiq в контейнере с приложением
-```bash
-dramatiq modules.email.task
+dramatiq modules.email.tasks
 ```
