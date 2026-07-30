@@ -114,7 +114,7 @@ docker compose -f=docker/docker-compose.yml --env-file=.env exec garage /garage 
 ID                Hostname      Address         Tags  Zone  Capacity          DataAvail  Version
 4619a172fdcf58a0  0080c32bcdbf  127.0.0.1:3901              NO ROLE ASSIGNED             v2.3.0
 ```
-Допустим наш ID это 4619a172fdcf58a0.
+Допустим, наш ID - это 4619a172fdcf58a0.
 Далее создайте layout и примените
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
@@ -123,7 +123,7 @@ docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage layout apply --version 1
 ```
-Сойздайте bucket. Его имя запишите в .env в `S3_BUCKET_NAME`
+Создайте bucket. Его имя запишите в .env в `S3_BUCKET_NAME`
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage bucket create ИМЯ_БАКЕТА
@@ -160,12 +160,12 @@ Can create buckets:  false
 ==== BUCKETS FOR THIS KEY ====
 Permissions  ID  Global aliases  Local aliases
 ```
-Назначте ключи на созданный bucket
+Назначьте ключи на созданный bucket
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage bucket allow --read --write --key ИМЯ_КЛЮЧА ИМЯ_БАКЕТА
 ```
-Абсолютно аналогично сделайте и для бакета трейсов, только не создавайте новый layout, а только бакет и запишите результаты в `TRACE_S3_ACCESS_KEY`, `TRACE_S3_BUCKET_NAME`, `TRACE_S3_SECRET_KEY` 
+Аналогично сделайте и для бакета трейсов, только не создавайте новый layout, а только бакет и запишите результаты в `TRACE_S3_ACCESS_KEY`, `TRACE_S3_BUCKET_NAME`, `TRACE_S3_SECRET_KEY` 
 
 Остановите контейнер с garage
 ```bash
