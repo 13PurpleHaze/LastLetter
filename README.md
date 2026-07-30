@@ -53,10 +53,10 @@ Email-уведомления:
 
 ## Get started
 
-### 0. Установи необходимые зависимости
+### 0. Установите необходимые зависимости
 Перед запуском необходимо установить [Docker](https://docs.docker.com/)
 
-### 1. Клонируй репозиторий
+### 1. Клонируйте репозиторий
 
 ```bash
 git clone https://github.com/13PurpleHaze/LastLetter.git
@@ -99,7 +99,7 @@ metrics_token = "..." <- сюда
 ```
 
 
-### 3. Сконфигурируйте garage
+### 3. Сконфигурируйтете garage
 Нам нужно создать 2 бакета: первый для медиафайлов капсул, второй для трейсов. Для этого нужно пройти эти шаги
 
 Запустите контейнер только с garage
@@ -115,7 +115,7 @@ ID                Hostname      Address         Tags  Zone  Capacity          Da
 4619a172fdcf58a0  0080c32bcdbf  127.0.0.1:3901              NO ROLE ASSIGNED             v2.3.0
 ```
 Допустим наш ID это 4619a172fdcf58a0.
-Далее создаем layout и применяем
+Далее создайте layout и примените
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage layout assign -z dc1 -c 1G 4619a172fdcf58a0
@@ -123,7 +123,7 @@ docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage layout apply --version 1
 ```
-Создаем bucket. Его имя запишем в .env в `S3_BUCKET_NAME`
+Сойздайте bucket. Его имя запишите в .env в `S3_BUCKET_NAME`
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage bucket create ИМЯ_БАКЕТА
@@ -142,7 +142,7 @@ Global alias:    lastletter
 ==== KEYS FOR THIS BUCKET ====
 Permissions  Access key    Local aliases
 ```
-Создаем ключи. Сохраняем Key ID и Secret key в .env файл поля `S3_ACCESS_KEY` и `S3_SECRET_KEY` соответственно.
+Создайте ключи. Сохраните Key ID и Secret key в .env файл поля `S3_ACCESS_KEY` и `S3_SECRET_KEY` соответственно.
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage key create ИМЯ_КЛЮЧА
@@ -160,24 +160,24 @@ Can create buckets:  false
 ==== BUCKETS FOR THIS KEY ====
 Permissions  ID  Global aliases  Local aliases
 ```
-Назначем ключи на наш созданный bucket
+Назначте ключи на созданный bucket
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env exec garage \
   /garage bucket allow --read --write --key ИМЯ_КЛЮЧА ИМЯ_БАКЕТА
 ```
-Абсолютно аналогично делаем и для бакетов для трейсов, только не создаем новый layout, а только бакеты и записываем результаты в `TRACE_S3_ACCESS_KEY`, `TRACE_S3_BUCKET_NAME`, `TRACE_S3_SECRET_KEY` 
+Абсолютно аналогично сделайте и для бакета трейсов, только не создавайте новый layout, а только бакет и запишите результаты в `TRACE_S3_ACCESS_KEY`, `TRACE_S3_BUCKET_NAME`, `TRACE_S3_SECRET_KEY` 
 
-Останови контейнер с garage
+Остановите контейнер с garage
 ```bash
 docker compose -f=docker/docker-compose.yml --env-file=.env stop garage
 ```
 
-### 4. Собери проект
+### 4. Соберите проект
 ```bash
 make deploy
 ```
 
-### 5. Запусти воркер dramatiq в контейнере с приложением
+### 5. Запустите воркер dramatiq в контейнере с приложением
 ```bash
 dramatiq modules.email.tasks
 ```
