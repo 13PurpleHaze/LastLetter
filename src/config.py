@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         extra="allow",
         case_sensitive=True,
-        env_file=str(Path.cwd().parent / ".env"),
+        env_file=str(Path(__file__).resolve().parent.parent / ".env"),
     )
     BASE_DIR: Path = Path.cwd().parent
     CURRENT_DIR: Path = Path.cwd()
